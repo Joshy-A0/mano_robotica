@@ -1,0 +1,112 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MANO ROBOTICA</title>
+  <link rel="stylesheet" href="{% static 'miapp/style.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <!-- Si no tenés logo.png en la carpeta de arriba, quitá el <img> -->
+      <img src="../logo.png" alt="Logo" style="height:28px">
+      MANO ROBOTICA
+    </div>
+    <button class="btn-exit">SALIR</button>
+  </header>
+
+  <main class="grid">
+    <!-- Left -->
+    <aside class="panel">
+      <select class="select" aria-label="Puerto serie">
+        <option>COM3</option><option>COM4</option><option>COM5</option>
+      </select>
+
+      <button class="btn">GUARDAR POSICIONES</button>
+      <button class="btn">REPRODUCIR MOVIMIENTOS</button>
+      <button class="btn">DETENER MOVIMIENTO</button>
+
+      <div>
+        <label class="small">Delay (ms)</label>
+        <input class="num" type="number" value="1000" min="0" step="10">
+      </div>
+    </aside>
+
+    <!-- Center -->
+    <section class="stage">
+      <!-- Reemplazá por tu imagen si la tenés una carpeta arriba -->
+      <img src="../robot.png" alt="Brazo robótico">
+    </section>
+
+    <!-- Right -->
+    <aside class="stack">
+      <button class="btn btn-small">EXPORTAR POSICIONES</button>
+      <button class="btn btn-small">IMPORTAR POSICIONES</button>
+      <button class="btn btn-small btn-danger">RESETEAR POSICIONES</button>
+
+      <div class="sliders">
+        <div class="slider-row">
+          <div class="value" id="val0">90.00</div>
+          <input type="range" id="s0" min="0" max="180" step="0.01" value="90">
+        </div>
+        <div class="slider-row">
+          <div class="value" id="val1">112.00</div>
+          <input type="range" id="s1" min="0" max="180" step="0.01" value="112">
+        </div>
+        <div class="slider-row">
+          <div class="value" id="val2">180.00</div>
+          <input type="range" id="s2" min="0" max="180" step="0.01" value="180">
+        </div>
+        <div class="slider-row">
+          <div class="value" id="val3">180.00</div>
+          <input type="range" id="s3" min="0" max="180" step="0.01" value="180">
+        </div>
+        <div class="slider-row">
+          <div class="value" id="val4">137.00</div>
+          <input type="range" id="s4" min="0" max="180" step="0.01" value="137">
+        </div>
+        <div class="slider-row">
+          <div class="value" id="val5">31.00</div>
+          <input type="range" id="s5" min="0" max="180" step="0.01" value="31">
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <p class="footer">MOVIMIENTOS DETENIDOS</p>
+
+  <script>
+    // Botón SALIR -> vuelve al login
+    document.querySelector('.btn-exit')?.addEventListener('click', () => {
+      localStorage.removeItem('fc_user');
+      window.location.href = '{% url "login" %}';
+    });
+
+    // (opcional) muestra quién inició sesión en el header
+    const user = localStorage.getItem('fc_user');
+    if (user) {
+      const brand = document.querySelector('.brand');
+      if (brand) {
+        const span = document.createElement('span');
+        span.style.fontSize = '14px';
+        span.style.fontWeight = '500';
+        span.style.marginLeft = '8px';
+        span.style.opacity = '0.7';
+        span.textContent = `(Hola, ${user})`;
+        brand.appendChild(span);
+      }
+    }
+
+    // Refresca etiquetas de valor con 2 decimales
+    for (let i = 0; i < 6; i++) {
+      const s = document.getElementById('s' + i);
+      const v = document.getElementById('val' + i);
+      const update = () => v.textContent = Number(s.value).toFixed(2);
+      s.addEventListener('input', update);
+      update();
+    }
+  </script>
+</body>
+</html>

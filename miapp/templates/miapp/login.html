@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Brazo Robotico</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'miapp/login.css' %}">
+
+  <style>
+    /* Hace que el formulario sea una columna y centra los hijos */
+    #form-login {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* ESTO CENTRA LOS RECUADROS */
+        width: 100%;
+    }
+
+    /* Asegura que inputs y botones tengan el mismo ancho y margen */
+    #form-login input,
+    #form-login button {
+        width: 90%;       /* Ocupan el 90% del ancho del contenedor */
+        margin: 8px 0;    /* Espacio arriba y abajo */
+        box-sizing: border-box; /* Para que el padding no deforme el ancho */
+    }
+  </style>
+  </head>
+
+<body>
+   {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+        <div class="alert {{ message.tags }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  
+  <div class="login-container">
+    <div class="logo">
+      <img src="{% static 'robotsaludando.jpg' %}" alt="Logo" style="height: 70px; width: auto; vertical-align: middle;"> 
+      LOGIN
+    </div>
+
+    <form method="POST" id="form-login" autocomplete="on">
+      {% csrf_token %}
+      <input type="text" id="username" name="username" placeholder="Usuario" required>
+      <input type="password" id="password" name="password" placeholder="Contraseña" required>
+      <button type="submit" name="action" value="login">INICIAR SESIÓN</button>
+      <button type="submit" name="action" value="register">REGISTRARSE</button>
+      <div id="msg" class="error"></div>
+    </form>
+  </div>
+
+</body>
+</html>

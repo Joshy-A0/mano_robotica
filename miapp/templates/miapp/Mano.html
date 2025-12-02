@@ -1,0 +1,158 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mano Robótica</title>
+</head>
+
+<body>
+
+    <h1>Control de Mano Robótica</h1>
+
+    <a href="{% url 'login' %}">
+        <button>Volver al Login</button>
+    </a>
+
+    <!-- ================= FINGERS ================= -->
+    <div id="fingers">
+
+        <div>
+            <label>Pulgar: <span id="thumb-value">0</span></label>
+            <input type="range" id="thumb" min="0" max="100" value="0">
+        </div>
+
+        <div>
+            <label>Índice: <span id="index-value">0</span></label>
+            <input type="range" id="index" min="0" max="100" value="0">
+        </div>
+
+        <div>
+            <label>Medio: <span id="middle-value">0</span></label>
+            <input type="range" id="middle" min="0" max="100" value="0">
+        </div>
+
+        <div>
+            <label>Anular: <span id="ring-value">0</span></label>
+            <input type="range" id="ring" min="0" max="100" value="0">
+        </div>
+
+        <div>
+            <label>Meñique: <span id="pinky-value">0</span></label>
+            <input type="range" id="pinky" min="0" max="100" value="0">
+        </div>
+    </div>
+
+    <!-- ================= BOTONES ================= -->
+    <div>
+        <button id="save">Guardar Movimiento</button>
+        <button id="repeat">Repetir Movimiento</button>
+        <button id="reset">Resetear</button>
+        <button id="stop">Detener</button>
+    </div>
+
+    <!-- ================= SCRIPT ================= -->
+    <script>
+
+        const fingers = [
+            { id: 'thumb', label: 'thumb-value' },
+            { id: 'index', label: 'index-value' },
+            { id: 'middle', label: 'middle-value' },
+            { id: 'ring', label: 'ring-value' },
+            { id: 'pinky', label: 'pinky-value' }
+        ];
+
+        // Mostrar valores mientras mueves los sliders
+        fingers.forEach(f => {
+            const input = document.getElementById(f.id);
+            const label = document.getElementById(f.label);
+
+            input.addEventListener("input", () => {
+                label.textContent = input.value;
+            });
+        });
+
+        // Obtener token CSRF
+        function getCSRFToken() {
+            return document.cookie.split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+        }
+
+        // ====== GUARDAR MOVIMIENTO EN BD ======
+        document.getElementById("save").addEventListener("click", () => {
+
+            const data = {
+                thumb: document.getElementById("thumb").value,
+                index: document.getElementById("index").value,
+                middle: document.getElementById("middle").value,
+                ring: document.getElementById("ring").value,
+                pinky: document.getElementById("pinky").value
+            };
+
+            fetch("{% url 'save_movement' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: JSON.stringify(data)
+            })
+                .then(r => r.json())
+                .then(res => alert(res.message))
+                .catch(() => alert("Error al guardar el movimiento."));
+        });
+
+        // ====== CARGAR ÚLTIMO MOVIMIENTO ======
+        document.getElementById("repeat").addEventListener("click", () => {
+
+            fetch("{% url 'load_movement' %}")
+                .then(r => r.json())
+                .then(data => {
+
+                    if (data.status === "no_data") {
+                        alert("No hay movimientos guardados.");
+                        return;
+                    }
+
+                    // Asignar valores a sliders
+                    document.getElementById('thumb').value = data.data.thumb;
+                    document.getElementById('index').value = data.data.index;
+                    document.getElementById('middle').value = data.data.middle;
+                    document.getElementById('ring').value = data.data.ring;
+                    document.getElementById('pinky').value = data.data.pinky;
+
+                    // Actualizar labels
+                    fingers.forEach(f => {
+                        document.getElementById(f.label).textContent =
+                            document.getElementById(f.id).value;
+                    });
+
+                    alert("Movimiento cargado.");
+                });
+        });
+
+        // ====== RESET ======
+        document.getElementById("reset").addEventListener("click", () => {
+            fingers.forEach(f => {
+                document.getElementById(f.id).value = 0;
+                document.getElementById(f.label).textContent = 0;
+            });
+        });
+
+        // ====== STOP (igual que reset) ======
+        document.getElementById("stop").addEventListener("click", () => {
+            fingers.forEach(f => {
+                document.getElementById(f.id).value = 0;
+                document.getElementById(f.label).textContent = 0;
+            });
+            alert("Movimiento detenido.");
+        });
+
+    </script>
+
+</body>
+
+</html>

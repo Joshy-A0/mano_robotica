@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+{% load static %}
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mano Robótica Control</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(45deg, #ff7a3c, #ffce81);
+      color: #333;
+      padding: 0;
+      overflow: hidden;
+      margin: 0;
+    }
+
+    .card {
+      width: 100vw;
+      height: 100vh;
+      padding: 20px;
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+      border: 1px solid #1f2937;
+      text-align: center;
+      position: relative;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .card-header h1 {
+      font-size: 3rem;
+      color: #242d57;
+      margin-top: 30px;
+      margin-bottom: 10px;
+    }
+
+    .card-header p {
+      font-size: 1.2rem;
+      margin-top: 10px;
+      color: #fff;
+    }
+
+    .mode-toggle {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    .mode-toggle-label {
+      font-weight: 600;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider-switch {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #9ca3af;
+      transition: .3s;
+      border-radius: 999px;
+    }
+
+    .slider-switch:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider-switch {
+      background-color: #22c55e;
+    }
+
+    input:checked + .slider-switch:before {
+      transform: translateX(22px);
+    }
+
+    .robot-hand {
+      width: 30%;
+      height: 60%;
+      background-image: url("{% static 'MANOroboticaCANVA-removebg-preview.png' %}");
+      background-size: contain;
+      background-repeat: no-repeat;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+
+    .slider-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-evenly;
+      position: absolute;
+      top: 15%;
+      width: 100%;
+      transform: translateY(-50%);
+      z-index: 2;
+    }
+
+    .slider-label {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .slider {
+      width: 80%;
+      height: 8px;
+      background: #333;
+      border-radius: 12px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 999px;
+      background: #111827;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #0ea5e9;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #0ea5e9;
+      cursor: pointer;
+    }
+
+    .sensor-values {
+      position: absolute;
+      top: 60%;
+      left: 10%;
+      right: 10%;
+      display: flex;
+      justify-content: space-between;
+      color: #fff;
+      font-size: 1.1rem;
+      z-index: 2;
+    }
+
+    .buttons-wrapper {
+      margin-top: 30px;
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      z-index: 3;
+    }
+
+    .button {
+      background-color: #242d57;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 1.2rem;
+    }
+
+    .button:disabled {
+      background-color: #b8b8b8;
+      cursor: not-allowed;
+    }
+
+    .log {
+      font-size: 0.85rem;
+      margin-top: 14px;
+      color: #9ca3af;
+      max-height: 80px;
+      overflow-y: auto;
+      border-top: 1px solid #1f2937;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+
+
+<body>
+  <div class="card">
+    <div class="card-header">
+      <h1>MANO ROBÓTICA</h1>
+      <p>Controla los movimientos de los dedos</p>
+    </div>
+
+    <div class="mode-toggle">
+      <span class="mode-toggle-label" id="modeLabel">Modo: Lectura desde guante</span>
+      <label class="switch">
+        <input type="checkbox" id="modeSwitch" />
+        <span class="slider-switch"></span>
+      </label>
+    </div>
+
+    <div class="robot-hand"></div>
+
+    <!-- SLIDERS YA ADAPTADOS -->
+    <div class="slider-wrapper">
+      <div>
+        <label class="slider-label">Dedo Pulgar</label>
+        <input type="range" id="thumb" class="slider" min="0" max="100" value="50" />
+      </div>
+      <div>
+        <label class="slider-label">Dedo Índice</label>
+        <input type="range" id="index" class="slider" min="0" max="100" value="50" />
+      </div>
+      <div>
+        <label class="slider-label">Dedo Medio</label>
+        <input type="range" id="middle" class="slider" min="0" max="100" value="50" />
+      </div>
+      <div>
+        <label class="slider-label">Dedo Anular</label>
+        <input type="range" id="ring" class="slider" min="0" max="100" value="50" />
+      </div>
+      <div>
+        <label class="slider-label">Dedo Meñique</label>
+        <input type="range" id="pinky" class="slider" min="0" max="100" value="50" />
+      </div>
+    </div>
+
+    <!-- LABELS YA ADAPTADOS -->
+    <div class="sensor-values">
+      <span id="thumb-value">Pulgar: --%</span>
+      <span id="index-value">Índice: --%</span>
+      <span id="middle-value">Medio: --%</span>
+      <span id="ring-value">Anular: --%</span>
+      <span id="pinky-value">Meñique: --%</span>
+    </div>
+
+    <!-- BOTONES ADAPTADOS -->
+    <div class="buttons-wrapper">
+      <button class="button" id="save">Guardar Movimiento</button>
+      <button class="button" id="repeat">Repetir Movimiento</button>
+      <button class="button" id="reset">Resetear</button>
+      <button class="button" id="stop">Detener Movimiento</button>
+
+      <a href="{% url 'login' %}">
+        <button>Volver al Login</button>
+      </a>
+    </div>
+
+    <div class="log" id="logBox"></div>
+  </div>
+
+  <script>
+    const ESP32_IP = "10.15.102.31";
+    const gateway = `ws://${ESP32_IP}:81`;
+
+    let websocket = null;
+    const logBox = document.getElementById("logBox");
+
+    // AHORA LOS SLIDERS TIENEN LOS IDS DEL PRIMER CÓDIGO
+    const sliders = {
+      pulgar: document.getElementById('thumb'),
+      indice: document.getElementById('index'),
+      medio: document.getElementById('middle'),
+      anular: document.getElementById('ring'),
+      menique: document.getElementById('pinky')
+    };
+
+    const valuePulgar  = document.getElementById('thumb-value');
+    const valueIndice  = document.getElementById('index-value');
+    const valueMedio   = document.getElementById('middle-value');
+    const valueAnular  = document.getElementById('ring-value');
+    const valueMenique = document.getElementById('pinky-value');
+
+    const modeSwitch = document.getElementById('modeSwitch');
+    const modeLabel  = document.getElementById('modeLabel');
+
+    let manualMode = false;
+
+    function writeLog(text) {
+      const date = new Date();
+      const timeStr = date.toLocaleTimeString();
+      logBox.innerHTML = `[${timeStr}] ${text}<br>` + logBox.innerHTML;
+    }
+
+    function setSlidersEnabled(enabled) {
+      Object.values(sliders).forEach(sl => {
+        sl.disabled = !enabled;
+      });
+    }
+
+    function updateTextFromSliders() {
+      valuePulgar.textContent  = `Pulgar: ${sliders.pulgar.value}%`;
+      valueIndice.textContent  = `Índice: ${sliders.indice.value}%`;
+      valueMedio.textContent   = `Medio: ${sliders.medio.value}%`;
+      valueAnular.textContent  = `Anular: ${sliders.anular.value}%`;
+      valueMenique.textContent = `Meñique: ${sliders.menique.value}%`;
+    }
+
+    function initWebSocket() {
+      writeLog("Intentando conectar WebSocket a " + gateway + " ...");
+      websocket = new WebSocket(gateway);
+
+      websocket.onopen = () => writeLog("WebSocket conectado.");
+      websocket.onclose = () => {
+        writeLog("Desconectado. Reintentando...");
+        setTimeout(initWebSocket, 2000);
+      };
+      websocket.onerror = err => writeLog("Error WS: " + err.message);
+
+      websocket.onmessage = event => {
+        let data;
+        try { data = JSON.parse(event.data); }
+        catch { return writeLog("JSON inválido"); }
+
+        if (!manualMode) {
+          sliders.pulgar.value  = data.sensor1?.percent ?? 0;
+          sliders.indice.value  = data.sensor2?.percent ?? 0;
+          sliders.medio.value   = data.sensor3?.percent ?? 0;
+          sliders.anular.value  = data.sensor4?.percent ?? 0;
+          sliders.menique.value = data.sensor5?.percent ?? 0;
+
+          updateTextFromSliders();
+        }
+      };
+    }
+
+    function sendSliderValue() {
+      if (websocket && websocket.readyState === WebSocket.OPEN) {
+        const movementData = {
+          pulgar:  Number(sliders.pulgar.value),
+          indice:  Number(sliders.indice.value),
+          medio:   Number(sliders.medio.value),
+          anular:  Number(sliders.anular.value),
+          menique: Number(sliders.menique.value)
+        };
+        websocket.send(JSON.stringify(movementData));
+        writeLog("Enviado comando manual: " + JSON.stringify(movementData));
+      }
+    }
+
+    // ==== DJANGO CSRF ====
+    function getCSRFToken() {
+      return document.cookie.split('; ')
+          .find(row => row.startsWith('csrftoken='))
+          ?.split('=')[1];
+    }
+
+    // ==== EVENTOS DJANGO ====
+    document.getElementById("save").addEventListener("click", () => {
+
+      const data = {
+        thumb:  sliders.pulgar.value,
+        index:  sliders.indice.value,
+        middle: sliders.medio.value,
+        ring:   sliders.anular.value,
+        pinky:  sliders.menique.value
+      };
+
+      fetch("{% url 'save_movement' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken()
+        },
+        body: JSON.stringify(data)
+      })
+      .then(r => r.json())
+      .then(res => alert(res.message))
+      .catch(() => alert("Error al guardar el movimiento."));
+    });
+
+    document.getElementById("repeat").addEventListener("click", () => {
+
+      fetch("{% url 'load_movement' %}")
+      .then(r => r.json())
+      .then(data => {
+
+        if (data.status === "no_data") {
+          alert("No hay movimientos guardados.");
+          return;
+        }
+
+        sliders.pulgar.value  = data.data.thumb;
+        sliders.indice.value  = data.data.index;
+        sliders.medio.value   = data.data.middle;
+        sliders.anular.value  = data.data.ring;
+        sliders.menique.value = data.data.pinky;
+
+        updateTextFromSliders();
+      });
+    });
+
+    document.getElementById("reset").addEventListener("click", () => {
+      Object.values(sliders).forEach(slider => slider.value = 0);
+      updateTextFromSliders();
+      if (manualMode) sendSliderValue();
+    });
+
+    document.getElementById("stop").addEventListener("click", () => {
+      Object.values(sliders).forEach(slider => slider.value = 0);
+      updateTextFromSliders();
+      alert("Movimiento detenido.");
+    });
+
+    window.onload = () => {
+      initWebSocket();
+      setSlidersEnabled(false);
+
+      Object.values(sliders).forEach(slider => {
+        slider.addEventListener('input', () => {
+          if (manualMode) {
+            updateTextFromSliders();
+            sendSliderValue();
+          }
+        });
+      });
+
+      modeSwitch.addEventListener('change', () => {
+        manualMode = modeSwitch.checked;
+        setSlidersEnabled(manualMode);
+        updateTextFromSliders();
+      });
+    };
+  </script>
+</body>
+</html>
