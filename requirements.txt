@@ -1,0 +1,90 @@
+REQUISITOS E INSTALACIÓN
+
+1. Sacar la IP de tu modulo wifi
+
+2. En el archivo ManoRobotica.html cambiar la IP a la del ESP que estes usando
+
+3. Abrir un terminal y crear un entorno virtual:
+python -m venv venv
+
+4. Activar el entorno virtual:
+En Windows:
+venv\Scripts\activate
+En Linux/MacOS:
+source venv/bin/activate
+
+5. Instalar Django:
+pip install django
+
+6. Ejecutar el servidor:
+python manage.py runserver
+
+7. Acceder a la página:
+http://127.0.0.1:8000/
+* la IP debe ser del esp o del modulo que se este usando 
+
+MANUAL DE USUARIO
+1. Inicio de la aplicación:
+Abrir el programa o acceder desde el navegador.
+Esperar a que aparezca la ventana de inicio de sesión.
+
+2. Acceso al sistema:
+Ingresar nombre de usuario.
+Ingresar contraseña.
+Presionar "Iniciar Sesión".
+Automáticamente se abrirá la interfaz principal.
+
+3. Interfaz principal:
+Al ingresar se visualizará:
+Cinco sliders: Pulgar, Índice, Medio, Anular y Meñique.
+Un selector de modo: Manual o Guante.
+Un indicador del estado del sistema.
+Una zona de registro de eventos (mensajes WebSocket, advertencias, etc.).
+Una imagen de referencia de la mano robótica.
+Botones de acción ubicados en la parte inferior.
+
+4. Modos de operación:
+Modo Manual:
+Permite mover cada dedo individualmente usando los sliders.
+Cada slider controla un rango entre 0% y 100% (equivalente a 0° a 180°).
+Los valores se envían al microcontrolador en tiempo real.
+
+Modo Guante (Automático):
+La interfaz deja de usar los sliders.
+Los movimientos se realizan a partir de los sensores flex del guante.
+La mano robótica replica la flexión del usuario.
+
+5. Funciones de los botones:
+
+Guardar Movimiento:
+Guarda la posición actual de los cinco dedos.
+
+Repetir Movimiento:
+Ejecuta la última secuencia almacenada.
+
+Resetear:
+Mueve todos los dedos a la posición 0% (completamente extendidos).
+
+Detener Movimiento:
+Cancela cualquier movimiento o secuencia en ejecución.
+
+Volver al Login:
+Cierra la sesión y retorna a la pantalla de inicio.
+
+Visualización de porcentajes:
+Debajo de cada slider aparece el porcentaje de apertura del dedo.
+
+Se actualiza automáticamente al mover los controles.
+
+Registro y estado del sistema:
+En esta sección se muestran mensajes como:
+Estado del WebSocket.
+Comandos enviados al microcontrolador.
+Avisos y errores.
+Cambios de modo.
+Sirve para monitorear la comunicación y diagnosticar posibles fallas.
+
+Finalización:
+Presionar "Volver al Login" para cerrar sesión.
+Cerrar la aplicación o detener el servidor Django si no se seguirá usando.
+Apagar el ESP32-S3 o desconectar la alimentación del sistema.
